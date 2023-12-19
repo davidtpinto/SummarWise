@@ -40,23 +40,31 @@ Summarwise integrates with popular cloud storage services, document management p
 
 ### Installation
 
-# Clone the repository
+#### Clone the repository
 
+```bash
 git clone https://github.com/davidtpinto/summarwise.git
+```
 
-# Change directory
+#### Change directory
 
+```bash
 cd summarwise
+```
 
-# Install dependencies
+#### Install dependencies
 
+```bash
 npm install
+```
 
 ### Usage
 
-# Run the application
+#### Run the application
 
+```bash
 npm start
+```
 
 Visit [http://localhost:3000](http://localhost:3000) in your browser to start using Summarwise.
 
