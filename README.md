@@ -1,6 +1,3 @@
-Certainly! GitHub-flavored Markdown provides different formatting options for text. Here's an example README for Summarwise using some of these formatting features:
-
-````markdown
 # Summarwise: PDF Summarizer
 
 Summarwise is an innovative **Software as a Service (SaaS)** application designed to simplify the process of summarizing PDF documents. By leveraging advanced _natural language processing (NLP)_ and machine learning algorithms, Summarwise automatically condenses lengthy PDF files into concise and digestible summaries.
@@ -43,22 +40,29 @@ Summarwise integrates with popular cloud storage services, document management p
 
 ### Installation
 
+#### Clone the repository
+
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/summarwise.git
+git clone https://github.com/davidtpinto/summarwise.git
+```
 
-# Change directory
+#### Change directory
+
+```bash
 cd summarwise
+```
 
-# Install dependencies
+#### Install dependencies
+
+```bash
 npm install
 ```
-````
 
 ### Usage
 
+#### Run the application
+
 ```bash
-# Run the application
 npm start
 ```
 
@@ -77,10 +81,3 @@ This project is licensed under the [MIT License](LICENSE).
 Thank you to the open source community for their invaluable contributions.
 
 ---
-
-_Note: Replace placeholders such as "your-username" with the appropriate information for your GitHub repository._
-
-````
-
-In this example, I've used `**double asterisks**` for bold, `*single asterisks*` for italics, and triple backticks (\``` \```) for code blocks. Feel free to customize it further based on your preferences!
-````
