@@ -73,3 +73,81 @@ This project is licensed under the [MIT License](LICENSE).
 Thank you to the open source community for their invaluable contributions.
 
 ---
+
+```
+Private Sub DocumentBeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
+    UpdateExcelWithRequirements
+End Sub
+
+Sub UpdateExcelWithRequirements()
+    Dim xlApp As Object, xlBook As Object, xlSheet As Object
+    Dim WordRange As Range
+    Dim ReqID As String
+    Dim i As Long, lastRow As Long
+
+    On Error GoTo ErrorHandler
+
+    ' Open Excel workbook
+    Set xlApp = CreateObject("Excel.Application")
+    xlApp.Visible = False ' Excel runs in the background
+    Set xlBook = xlApp.Workbooks.Open("C:\path\to\your\workbook.xlsm", ReadOnly:=False)
+    Set xlSheet = xlBook.Sheets("Sheet1")
+
+    ' Loop through each word in the Word document
+    For Each WordRange In ActiveDocument.Words
+        If VarType(WordRange) = vbObject Then
+            ReqID = ExtractRequirementID(WordRange.Text)
+
+            If ReqID <> "" Then
+                ' Find the row in Excel with the requirement ID
+                lastRow = xlSheet.Cells(xlSheet.Rows.Count, "A").End(-4162).Row
+                For i = 1 To lastRow
+                    If xlSheet.Cells(i, 1).Value = ReqID Then
+                        xlSheet.Cells(i, 3).Value = "Complete" ' Assuming status is in column 3
+                        Exit For
+                    End If
+                Next i
+            End If
+        End If
+    Next WordRange
+
+    ' Save and close the Excel workbook
+    xlBook.Close SaveChanges:=True
+    xlApp.Quit
+
+    ' Clean up
+    Set xlSheet = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "An error occurred: " & Err.Description
+    ' Ensure Excel is not left open in case of an error
+    If Not xlBook Is Nothing Then
+        xlBook.Close SaveChanges:=False
+    End If
+    If Not xlApp Is Nothing Then
+        xlApp.Quit
+    End If
+    Set xlSheet = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+End Sub
+
+' Function to extract requirement ID from text
+Function ExtractRequirementID(Text As Variant) As String
+    Dim ReqID As String
+    ReqID = ""
+    
+    If VarType(Text) = vbString Then
+        If Text Like "*REQ###*" Then
+            ReqID = Left(Text, 6) ' Extracts the first 6 characters
+        End If
+    End If
+
+    ExtractRequirementID = ReqID
+End Function
+
+```
