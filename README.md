@@ -216,16 +216,6 @@ Sub UpdateExcelWithRequirements()
 
     ' Loop through each paragraph in the Word document
     For Each WordParagraph In ActiveDocument.Paragraphs
-        ' Regular expressions to find REQs
-        Set RegEx = CreateObject("VBScript.RegExp")
-        RegEx.Global = True
-        RegEx.IgnoreCase = True
-        RegEx.Pattern = "\[REQ\d+\]"
-
-        Set Matches = RegEx.Execute(WordParagraph.Range.Text)
-
-         ' Loop through each paragraph in the Word document
-    For Each WordParagraph In ActiveDocument.Paragraphs
         ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
         Set RegEx = CreateObject("VBScript.RegExp")
         RegEx.Global = True
