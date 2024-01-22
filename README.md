@@ -224,28 +224,34 @@ Sub UpdateExcelWithRequirements()
 
         Set Matches = RegEx.Execute(WordParagraph.Range.Text)
 
-        ' Loop through matches
-        For Each Match In Matches
-            ReqID = Mid(Match.Value, 2, Len(Match.Value) - 2)
-            HeadingInfo = WordParagraph.Range.Paragraphs(1).Range.Text
+         ' Loop through each paragraph in the Word document
+    For Each WordParagraph In ActiveDocument.Paragraphs
+        ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
+        Set RegEx = CreateObject("VBScript.RegExp")
+        RegEx.Global = True
+        RegEx.IgnoreCase = True
+        RegEx.Pattern = "\[REQ\d+\]" ' Match REQ IDs in square brackets
 
-            ' Find row for the requirement or find next available row
+        ' Find all matches in the paragraph
+        Set Matches = RegEx.Execute(WordParagraph.Range.Text)
+        
+        ' Loop through all matched REQs in the paragraph
+        For Each Match In Matches
+            ReqID = Mid(Match.Value, 2, Len(Match.Value) - 2) ' Extract REQ ID without brackets
+            HeadingInfo = WordParagraph.Range.Paragraphs(1).Range.Text ' Get the heading text
+            
+            ' Find the row in Excel with the requirement ID and update it
             lastRow = xlSheet.Cells(xlSheet.Rows.Count, "A").End(xlUp).Row
-            insertRow = 0
             For i = 1 To lastRow
-                If xlSheet.Cells(i, "A").Value = ReqID Then
-                    insertRow = i + 1 ' Find next available row
+                If xlSheet.Cells(i, "A").Value = ReqID Then ' Assuming Requirement ID is in column A
+                    xlSheet.Cells(i, "C").Value = "Complete" ' Assuming status is in column C
+                    xlSheet.Cells(i, "D").Value = HeadingInfo ' Assuming heading info is in column D
+                    Exit For
                 End If
             Next i
-
-            If insertRow = 0 Then insertRow = lastRow + 1 ' If ReqID not found, use the last row
-
-            ' Update or insert data
-            xlSheet.Cells(insertRow, "A").Value = ReqID
-            xlSheet.Cells(insertRow, "C").Value = "Complete"
-            xlSheet.Cells(insertRow, "D").Value = HeadingInfo
         Next Match
     Next WordParagraph
+
 
     ' Save and close the workbook
     xlWorkbook.Close SaveChanges:=True
