@@ -195,3 +195,92 @@ Function GetHeadingInfo(WordRange As Range) As String
 End Function
 
 ```
+
+```
+Option Explicit ' Enforce variable declaration
+
+Private WithEvents App As Word.Application
+
+Private Sub Document_Open()
+    Set App = Word.Application
+End Sub
+
+Private Sub App_DocumentBeforeSave(ByVal Doc As Document, SaveAsUI As Boolean, Cancel As Boolean)
+    MsgBox "Updating Excel File"
+    MyMacroToRunBeforeSave
+End Sub
+
+Sub MyMacroToRunBeforeSave()
+    UpdateExcelWithRequirements
+End Sub
+
+Sub UpdateExcelWithRequirements()
+    On Error GoTo ErrorHandler
+
+    Dim xlApp As Excel.Application
+    Dim xlWorkbook As Excel.Workbook
+    Dim xlSheet As Excel.Worksheet
+    Dim WordParagraph As Paragraph
+    Dim ReqID As String
+    Dim HeadingInfo As String
+    Dim i As Long, lastRow As Long
+
+    ' Open Excel workbook
+    Set xlApp = New Excel.Application
+    xlApp.Visible = False ' Excel runs in the background
+    Set xlWorkbook = xlApp.Workbooks.Open("C:\Users\T0285664\Desktop\Book1.xlsm", ReadOnly:=False)
+    Set xlSheet = xlWorkbook.Sheets("Sheet1")
+
+    ' Loop through each paragraph in the Word document
+    For Each WordParagraph In ActiveDocument.Paragraphs
+        ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
+        Set RegEx = CreateObject("VBScript.RegExp")
+        RegEx.Global = True
+        RegEx.IgnoreCase = True
+        RegEx.Pattern = "\[REQ\d+\]" ' Match REQ IDs in square brackets
+
+        ' Find all matches in the paragraph
+        Set Matches = RegEx.Execute(WordParagraph.Range.Text)
+        
+        ' Loop through all matched REQs in the paragraph
+        For Each Match In Matches
+            ReqID = Mid(Match.Value, 2, Len(Match.Value) - 2) ' Extract REQ ID without brackets
+            HeadingInfo = WordParagraph.Range.Paragraphs(1).Range.Text ' Get the heading text
+            ' Find the row in Excel with the requirement ID
+            lastRow = xlSheet.Cells(xlSheet.Rows.Count, "A").End(xlUp).Row
+            For i = 1 To lastRow
+                If xlSheet.Cells(i, "A").Value = ReqID Then ' Assuming Requirement ID is in column A
+                    xlSheet.Cells(i, "C").Value = "Complete" ' Assuming status is in column C
+                    xlSheet.Cells(i, "D").Value = HeadingInfo ' Assuming heading info is in column D
+                    Exit For
+                End If
+            Next i
+        Next Match
+    Next WordParagraph
+
+    ' Save and close the Excel workbook
+    xlWorkbook.Close SaveChanges:=True
+    xlApp.Quit
+
+    ' Clean up
+    Set xlSheet = Nothing
+    Set xlWorkbook = Nothing
+    Set xlApp = Nothing
+
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "An error occurred: " & Err.Description
+    ' Ensure Excel is not left open in case of an error
+    If Not xlWorkbook Is Nothing Then
+        xlWorkbook.Close SaveChanges:=False
+    End If
+    If Not xlApp Is Nothing Then
+        xlApp.Quit
+    End If
+    Set xlSheet = Nothing
+    Set xlWorkbook = Nothing
+    Set xlApp = Nothing
+End Sub
+
+```
