@@ -197,23 +197,6 @@ End Function
 ```
 
 ```
-Option Explicit ' Enforce variable declaration
-
-Private WithEvents App As Word.Application
-
-Private Sub Document_Open()
-    Set App = Word.Application
-End Sub
-
-Private Sub App_DocumentBeforeSave(ByVal Doc As Document, SaveAsUI As Boolean, Cancel As Boolean)
-    MsgBox "Updating Excel File"
-    MyMacroToRunBeforeSave
-End Sub
-
-Sub MyMacroToRunBeforeSave()
-    UpdateExcelWithRequirements
-End Sub
-
 Sub UpdateExcelWithRequirements()
     On Error GoTo ErrorHandler
 
@@ -223,42 +206,48 @@ Sub UpdateExcelWithRequirements()
     Dim WordParagraph As Paragraph
     Dim ReqID As String
     Dim HeadingInfo As String
-    Dim i As Long, lastRow As Long
+    Dim i As Long, lastRow As Long, insertRow As Long
 
     ' Open Excel workbook
     Set xlApp = New Excel.Application
-    xlApp.Visible = False ' Excel runs in the background
+    xlApp.Visible = False
     Set xlWorkbook = xlApp.Workbooks.Open("C:\Users\T0285664\Desktop\Book1.xlsm", ReadOnly:=False)
     Set xlSheet = xlWorkbook.Sheets("Sheet1")
 
     ' Loop through each paragraph in the Word document
     For Each WordParagraph In ActiveDocument.Paragraphs
-        ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
+        ' Regular expressions to find REQs
         Set RegEx = CreateObject("VBScript.RegExp")
         RegEx.Global = True
         RegEx.IgnoreCase = True
-        RegEx.Pattern = "\[REQ\d+\]" ' Match REQ IDs in square brackets
+        RegEx.Pattern = "\[REQ\d+\]"
 
-        ' Find all matches in the paragraph
         Set Matches = RegEx.Execute(WordParagraph.Range.Text)
-        
-        ' Loop through all matched REQs in the paragraph
+
+        ' Loop through matches
         For Each Match In Matches
-            ReqID = Mid(Match.Value, 2, Len(Match.Value) - 2) ' Extract REQ ID without brackets
-            HeadingInfo = WordParagraph.Range.Paragraphs(1).Range.Text ' Get the heading text
-            ' Find the row in Excel with the requirement ID
+            ReqID = Mid(Match.Value, 2, Len(Match.Value) - 2)
+            HeadingInfo = WordParagraph.Range.Paragraphs(1).Range.Text
+
+            ' Find row for the requirement or find next available row
             lastRow = xlSheet.Cells(xlSheet.Rows.Count, "A").End(xlUp).Row
+            insertRow = 0
             For i = 1 To lastRow
-                If xlSheet.Cells(i, "A").Value = ReqID Then ' Assuming Requirement ID is in column A
-                    xlSheet.Cells(i, "C").Value = "Complete" ' Assuming status is in column C
-                    xlSheet.Cells(i, "D").Value = HeadingInfo ' Assuming heading info is in column D
-                    Exit For
+                If xlSheet.Cells(i, "A").Value = ReqID Then
+                    insertRow = i + 1 ' Find next available row
                 End If
             Next i
+
+            If insertRow = 0 Then insertRow = lastRow + 1 ' If ReqID not found, use the last row
+
+            ' Update or insert data
+            xlSheet.Cells(insertRow, "A").Value = ReqID
+            xlSheet.Cells(insertRow, "C").Value = "Complete"
+            xlSheet.Cells(insertRow, "D").Value = HeadingInfo
         Next Match
     Next WordParagraph
 
-    ' Save and close the Excel workbook
+    ' Save and close the workbook
     xlWorkbook.Close SaveChanges:=True
     xlApp.Quit
 
@@ -271,7 +260,6 @@ Sub UpdateExcelWithRequirements()
 
 ErrorHandler:
     MsgBox "An error occurred: " & Err.Description
-    ' Ensure Excel is not left open in case of an error
     If Not xlWorkbook Is Nothing Then
         xlWorkbook.Close SaveChanges:=False
     End If
@@ -282,5 +270,6 @@ ErrorHandler:
     Set xlWorkbook = Nothing
     Set xlApp = Nothing
 End Sub
+
 
 ```
