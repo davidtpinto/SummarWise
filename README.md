@@ -288,18 +288,25 @@ Function ExtractRequirementID(Text As String) As String
     ExtractRequirementID = ReqID
 End Function
 
-' Function to get heading information from the Word document
 Function GetHeadingInfo(WordRange As Range) As String
     Dim HeadingInfo As String
     HeadingInfo = ""
     
-    ' Check if the WordRange is within a heading or section
+    ' Check if the WordRange is within a heading
     If WordRange.Paragraphs.Count > 0 Then
-        ' Get the text of the first paragraph
-        HeadingInfo = WordRange.Paragraphs(1).Range.Text
+        ' Get the paragraph style
+        Dim paraStyle As String
+        paraStyle = WordRange.Paragraphs(1).Style.NameLocal
+        
+        ' Check if it's a Heading 1, Heading 2, or Heading 3
+        If paraStyle = "Heading 1" Or paraStyle = "Heading 2" Or paraStyle = "Heading 3" Then
+            ' Get the text of the heading
+            HeadingInfo = WordRange.Paragraphs(1).Range.Text
+        End If
     End If
 
     GetHeadingInfo = HeadingInfo
 End Function
+
 
 ```
