@@ -288,25 +288,15 @@ Function ExtractRequirementID(Text As String) As String
     ExtractRequirementID = ReqID
 End Function
 
-Function GetHeadingInfo(WordRange As Range) As String
-    Dim HeadingInfo As String
-    HeadingInfo = ""
-    
-    ' Check if the WordRange is within a heading
-    If WordRange.Paragraphs.Count > 0 Then
-        ' Get the paragraph style
-        Dim paraStyle As String
-        paraStyle = WordRange.Paragraphs(1).Style.NameLocal
-        
-        ' Check if it's a Heading 1, Heading 2, or Heading 3
-        If paraStyle = "Heading 1" Or paraStyle = "Heading 2" Or paraStyle = "Heading 3" Then
-            ' Get the text of the heading
+' Loop through the document in reverse order
+    For i = ActiveDocument.Paragraphs.Count To 1 Step -1
+        If WordRange.Paragraphs(1).Style.NameLocal = "Heading 1" Or _
+           WordRange.Paragraphs(1).Style.NameLocal = "Heading 2" Or _
+           WordRange.Paragraphs(1).Style.NameLocal = "Heading 3" Then
+            ' Get the text of the last heading
             HeadingInfo = WordRange.Paragraphs(1).Range.Text
+            Exit For
         End If
-    End If
-
-    GetHeadingInfo = HeadingInfo
-End Function
-
+    Next i
 
 ```
