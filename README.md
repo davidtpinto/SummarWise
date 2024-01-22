@@ -75,25 +75,93 @@ Thank you to the open source community for their invaluable contributions.
 ---
 
 ```
+--- ThisDocument
+
+Private WithEvents App As Word.Application
+
+Private Sub Document_Open()
+Set App = Word.Application
+End Sub
+
+Private Sub App_DocumentBeforeSave(ByVal Doc As Document, SaveAsUI As Boolean, Cancel As Boolean)
+MsgBox "Updating Excel File"
+MyMacroToRunBeforeSave
+End Sub
+
+--- Module1
+
+Sub MyMacroToRunBeforeSave()
+    ' Your code here
+    UpdateExcelWithRequirements
+End Sub
+
+
 Sub UpdateExcelWithRequirements()
-    ' ... [your existing setup code for xlApp, xlBook, xlSheet] ...
+    Dim xlApp As Object, xlBook As Object, xlSheet As Object
+    Dim WordRange As Range
+    Dim ReqID As String
+    Dim i As Long, lastRow As Long
 
-    Dim searchRange As Range
-    Set searchRange = xlSheet.Range("A1:A100")  ' Define your specific range
+    On Error GoTo ErrorHandler
 
-    Dim WordRange As Range, foundCell As Range
+    ' Open Excel workbook
+    Set xlApp = CreateObject("Excel.Application")
+    xlApp.Visible = False ' Excel runs in the background
+    Set xlBook = xlApp.Workbooks.Open("C:\Users\T0285664\Desktop\Book1.xlsm", ReadOnly:=False)
+    Set xlSheet = xlBook.Sheets("Sheet1")
+
+    ' Loop through each word in the Word document
     For Each WordRange In ActiveDocument.Words
         ReqID = ExtractRequirementID(WordRange.Text)
 
         If ReqID <> "" Then
-            Set foundCell = searchRange.Find(What:=ReqID, LookIn:=xlValues, LookAt:=xlWhole)
-            If Not foundCell Is Nothing Then
-                xlSheet.Cells(foundCell.Row, 3).Value = "Complete"
-            End If
+            ' Find the row in Excel with the requirement ID
+            lastRow = xlSheet.Cells(xlSheet.Rows.Count, "A").End(-4162).Row
+            For i = 1 To lastRow
+                If xlSheet.Cells(i, 1).Value = ReqID Then
+                    xlSheet.Cells(i, 3).Value = "Complete" ' Assuming status is in column 3
+                    Exit For
+                End If
+            Next i
         End If
     Next WordRange
 
-    ' ... [rest of your cleanup code] ...
+    ' Save and close the Excel workbook
+    xlBook.Close SaveChanges:=True
+    xlApp.Quit
+
+    ' Clean up
+    Set xlSheet = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
+
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "An error occurred: " & Err.Description
+    ' Ensure Excel is not left open in case of an error
+    If Not xlBook Is Nothing Then
+        xlBook.Close SaveChanges:=False
+    End If
+    If Not xlApp Is Nothing Then
+        xlApp.Quit
+    End If
+    Set xlSheet = Nothing
+    Set xlBook = Nothing
+    Set xlApp = Nothing
 End Sub
+
+' Function to extract requirement ID from text
+Function ExtractRequirementID(Text As String) As String
+    Dim ReqID As String
+    ReqID = ""
+    
+    ' Simple extraction based on a fixed format (e.g., "REQ001")
+    If Text Like "*REQ###*" Then
+        ReqID = Left(Text, 6) ' Extracts the first 6 characters
+    End If
+
+    ExtractRequirementID = ReqID
+End Function
 
 ```
