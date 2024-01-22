@@ -164,4 +164,27 @@ Function ExtractRequirementID(Text As String) As String
     ExtractRequirementID = ReqID
 End Function
 
+
+
+
+Function ExtractRequirementID(Text As String) As String
+    Dim ReqID As String
+    ReqID = ""
+    
+    ' Regular expression pattern to match requirement IDs
+    Dim regEx As Object
+    Set regEx = CreateObject("VBScript.RegExp")
+    With regEx
+        .Global = True
+        .Pattern = "REQ_[\w\.]+"
+    End With
+    
+    If regEx.test(Text) Then
+        ' Extract the matched requirement ID
+        ReqID = regEx.Execute(Text)(0)
+    End If
+
+    ExtractRequirementID = ReqID
+End Function
+
 ```
