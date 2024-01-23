@@ -214,7 +214,7 @@ Sub UpdateExcelWithRequirements()
     Set xlWorkbook = xlApp.Workbooks.Open("C:\Users\T0285664\Desktop\Book1.xlsm", ReadOnly:=False)
     Set xlSheet = xlWorkbook.Sheets("Sheet1")
 
-    ' Loop through each paragraph in the Word document
+' Loop through each paragraph in the Word document
     For Each WordParagraph In ActiveDocument.Paragraphs
         ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
         Set RegEx = CreateObject("VBScript.RegExp")
@@ -228,8 +228,8 @@ Sub UpdateExcelWithRequirements()
         ' Loop through all matched REQs in the paragraph
         For Each Match In Matches
             ReqID = Mid(Match.Value, 2, Len(Match.Value) - 2) ' Extract REQ ID without brackets
-            HeadingInfo = WordParagraph.Range.Paragraphs(1).Range.Text ' Get the heading text
-            
+            HeadingInfo = GetHeadingInfo(WordParagraph.Range) ' Get the heading text
+
             ' Find the row in Excel with the requirement ID and update it
             lastRow = xlSheet.Cells(xlSheet.Rows.Count, "A").End(xlUp).Row
             For i = 1 To lastRow
