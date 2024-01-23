@@ -276,5 +276,26 @@ ErrorHandler:
     Set xlApp = Nothing
 End Sub
 
+    Dim para As Word.Paragraph
+    GetHeadingInfo = ""
+    For Each para In rng.Document.Paragraphs
+        If para.Range.End <= matchPosition Then
+            If para.Style <> "Normal" Then
+                ' Check if there is numbering and include it
+                If Not para.Range.ListFormat Is Nothing Then
+                    If para.Range.ListFormat.ListString <> "" Then
+                        GetHeadingInfo = para.Range.ListFormat.ListString & " " & para.Range.Text
+                    Else
+                        GetHeadingInfo = para.Range.Text
+                    End If
+                Else
+                    GetHeadingInfo = para.Range.Text
+                End If
+            End If
+        Else
+            Exit For
+        End If
+    Next para
+End Function
 
 ```
