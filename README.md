@@ -208,6 +208,15 @@ Sub UpdateExcelWithRequirements()
     Dim HeadingInfo As String
     Dim i As Long, lastRow As Long, insertRow As Long
 
+    ' Path of the Word document
+    Dim wordDocPath As String
+    wordDocPath = ActiveDocument.Path
+
+    ' Construct the relative path for the Excel file
+    ' For example, if the Excel file is in the same directory:
+    Dim excelFilePath As String
+    excelFilePath = wordDocPath & "\Book1.xlsm" ' Change 'Book1.xlsm' to your Excel file's name
+    
     ' Open Excel workbook
     Set xlApp = New Excel.Application
     xlApp.Visible = False
