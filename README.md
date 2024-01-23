@@ -90,44 +90,63 @@ End Sub
 
 --- Module1
 
-Sub MyMacroToRunBeforeSave()
+Sub UpdateExcelWithRequirements()
     ' Your code here
-    UpdateExcelWithRequirements
+    MsgBox "Updating Excel File"
+    ExcelModule
 End Sub
 
 
-Sub UpdateExcelWithRequirements()
+Function ExcelModule()
     Dim xlApp As Object, xlBook As Object, xlSheet As Object
     Dim WordRange As Range
     Dim ReqID As String
     Dim HeadingInfo As String
     Dim i As Long, lastRow As Long
+    
+    ' Path of the Word document
+    Dim wordDocPath As String
+    wordDocPath = ActiveDocument.Path
 
-    On Error GoTo ErrorHandler
-
+    ' Construct the relative path for the Excel file
+    ' For example, if the Excel file is in the same directory:
+    Dim excelFilePath As String
+    excelFilePath = wordDocPath & "\230700098_TDCD_CMCDRL_20240123_1.xlsm" ' Change '230700098_TDCD_CMCDRL_20240123_1.xlsm' to your Excel file's name
+    
     ' Open Excel workbook
     Set xlApp = CreateObject("Excel.Application")
     xlApp.Visible = False ' Excel runs in the background
-    Set xlBook = xlApp.Workbooks.Open("C:\Users\T0285664\Desktop\Book1.xlsm", ReadOnly:=False)
-    Set xlSheet = xlBook.Sheets("Sheet2")
+    Set xlBook = xlApp.Workbooks.Open(excelFilePath, ReadOnly:=False)
+    Set xlSheet = xlBook.Sheets("Compliance Matrix")
+        
+    ' Loop through each paragraph in the Word document
+    For Each WordParagraph In ActiveDocument.Paragraphs
+        ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
+        Set regEx = CreateObject("VBScript.RegExp")
+        regEx.Global = True
+        regEx.IgnoreCase = True
+        regEx.Pattern = "\[REQ\d+\]" ' Match REQ IDs in square brackets
 
-        ' Loop through each word in the Word document
-    For Each WordRange In ActiveDocument.Words
-        ReqID = ExtractRequirementID(WordRange.Text)
-        HeadingInfo = GetHeadingInfo(WordRange)
-
-        If ReqID <> "" Then
-            ' Find the row in Excel with the requirement ID
-            lastRow = xlSheet.Cells(xlSheet.Rows.Count, "B").End(-4162).Row
+        ' Find all matches in the paragraph
+        Set Matches = regEx.Execute(WordParagraph.Range.Text)
+        
+        ' Loop through all matched REQs in the paragraph
+        For Each Match In Matches
+            
+            ReqID = Match.Value ' Extract REQ ID without brackets
+            HeadingInfo = GetHeadingInfo(WordParagraph.Range) ' Get the heading text
+                        
+            ' Find the row in Excel with the requirement ID and update it
+            lastRow = xlSheet.Cells(xlSheet.Rows.Count, "D").End(-4162).Row
             For i = 1 To lastRow
-                If xlSheet.Cells(i, "B").Value = ReqID Then ' Assuming Requirement ID is in column A
-                    xlSheet.Cells(i, "E").Value = "Complete" ' Assuming status is in column C
-                    xlSheet.Cells(i, "H").Value = HeadingInfo ' Assuming heading info is in column D
+                If xlSheet.Cells(i, "D").Value = ReqID Then ' Assuming Requirement ID is in column D
+                    xlSheet.Cells(i, "H").Value = "Complete" ' Assuming status is in column H
+                    xlSheet.Cells(i, "I").Value = HeadingInfo ' Assuming heading info is in column I
                     Exit For
                 End If
             Next i
-        End If
-    Next WordRange
+        Next Match
+    Next WordParagraph
 
     ' Save and close the Excel workbook
     xlBook.Close SaveChanges:=True
@@ -138,7 +157,7 @@ Sub UpdateExcelWithRequirements()
     Set xlBook = Nothing
     Set xlApp = Nothing
 
-    Exit Sub
+    Exit Function
 
 ErrorHandler:
     MsgBox "An error occurred: " & Err.Description
@@ -152,7 +171,7 @@ ErrorHandler:
     Set xlSheet = Nothing
     Set xlBook = Nothing
     Set xlApp = Nothing
-End Sub
+End Function
 
 
 Function ExtractRequirementID(Text As String) As String
@@ -169,133 +188,23 @@ End Function
 
 ' Function to get heading information from the Word document
 Function GetHeadingInfo(WordRange As Range) As String
-    Dim HeadingInfo As String
-    HeadingInfo = ""
-    
-    ' Define a variable to store the last encountered heading
-    Dim LastHeading As String
-    LastHeading = ""
-    
-    ' Loop through the document to find the last heading before the WordRange
+    Dim para As Word.Paragraph
+    GetHeadingInfo = ""
+     ' Loop through the document to find the last heading before the WordRange
     For Each para In ActiveDocument.Paragraphs
         If para.Range.Start >= WordRange.Start Then
             Exit For ' Exit the loop when reaching or surpassing WordRange
-        ElseIf para.Style.NameLocal = "Heading 1" Or _
-               para.Style.NameLocal = "Heading 2" Or _
-               para.Style.NameLocal = "Heading 3" Then
+        ElseIf para.Style.NameLocal <> "Normal" And para.Style.NameLocal <> "2-Legend" And para.Style.NameLocal <> "0-BODY TEXT" Then
+            Debug.Print para.Style.NameLocal
             ' Update LastHeading with the current heading text
-            LastHeading = para.Range.Text
-        End If
+            If Not para.Range.ListFormat Is Nothing And para.Range.ListFormat.ListString <> "" Then
+                GetHeadingInfo = para.Range.ListFormat.ListString & " " & para.Range.Text
+            Else
+                GetHeadingInfo = para.Range.Text
+                End If
+         End If
     Next para
     
-    ' Set HeadingInfo to the last encountered heading
-    HeadingInfo = LastHeading
-    Debug.Print HeadingInfo
-    GetHeadingInfo = HeadingInfo
-End Function
-
-```
-
-```
-Sub UpdateExcelWithRequirements()
-    On Error GoTo ErrorHandler
-
-    Dim xlApp As Excel.Application
-    Dim xlWorkbook As Excel.Workbook
-    Dim xlSheet As Excel.Worksheet
-    Dim WordParagraph As Paragraph
-    Dim ReqID As String
-    Dim HeadingInfo As String
-    Dim i As Long, lastRow As Long, insertRow As Long
-
-    ' Path of the Word document
-    Dim wordDocPath As String
-    wordDocPath = ActiveDocument.Path
-
-    ' Construct the relative path for the Excel file
-    ' For example, if the Excel file is in the same directory:
-    Dim excelFilePath As String
-    excelFilePath = wordDocPath & "\Book1.xlsm" ' Change 'Book1.xlsm' to your Excel file's name
-    
-    ' Open Excel workbook
-    Set xlApp = New Excel.Application
-    xlApp.Visible = False
-    Set xlWorkbook = xlApp.Workbooks.Open("C:\Users\T0285664\Desktop\Book1.xlsm", ReadOnly:=False)
-    Set xlSheet = xlWorkbook.Sheets("Sheet1")
-
-' Loop through each paragraph in the Word document
-    For Each WordParagraph In ActiveDocument.Paragraphs
-        ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
-        Set RegEx = CreateObject("VBScript.RegExp")
-        RegEx.Global = True
-        RegEx.IgnoreCase = True
-        RegEx.Pattern = "\[REQ\d+\]" ' Match REQ IDs in square brackets
-
-        ' Find all matches in the paragraph
-        Set Matches = RegEx.Execute(WordParagraph.Range.Text)
-        
-        ' Loop through all matched REQs in the paragraph
-        For Each Match In Matches
-            ReqID = Mid(Match.Value, 2, Len(Match.Value) - 2) ' Extract REQ ID without brackets
-            HeadingInfo = GetHeadingInfo(WordParagraph.Range) ' Get the heading text
-
-            ' Find the row in Excel with the requirement ID and update it
-            lastRow = xlSheet.Cells(xlSheet.Rows.Count, "A").End(xlUp).Row
-            For i = 1 To lastRow
-                If xlSheet.Cells(i, "A").Value = ReqID Then ' Assuming Requirement ID is in column A
-                    xlSheet.Cells(i, "C").Value = "Complete" ' Assuming status is in column C
-                    xlSheet.Cells(i, "D").Value = HeadingInfo ' Assuming heading info is in column D
-                    Exit For
-                End If
-            Next i
-        Next Match
-    Next WordParagraph
-
-
-    ' Save and close the workbook
-    xlWorkbook.Close SaveChanges:=True
-    xlApp.Quit
-
-    ' Clean up
-    Set xlSheet = Nothing
-    Set xlWorkbook = Nothing
-    Set xlApp = Nothing
-
-    Exit Sub
-
-ErrorHandler:
-    MsgBox "An error occurred: " & Err.Description
-    If Not xlWorkbook Is Nothing Then
-        xlWorkbook.Close SaveChanges:=False
-    End If
-    If Not xlApp Is Nothing Then
-        xlApp.Quit
-    End If
-    Set xlSheet = Nothing
-    Set xlWorkbook = Nothing
-    Set xlApp = Nothing
-End Sub
-
-    Dim para As Word.Paragraph
-    GetHeadingInfo = ""
-    For Each para In rng.Document.Paragraphs
-        If para.Range.End <= matchPosition Then
-            If para.Style <> "Normal" Then
-                ' Check if there is numbering and include it
-                If Not para.Range.ListFormat Is Nothing Then
-                    If para.Range.ListFormat.ListString <> "" Then
-                        GetHeadingInfo = para.Range.ListFormat.ListString & " " & para.Range.Text
-                    Else
-                        GetHeadingInfo = para.Range.Text
-                    End If
-                Else
-                    GetHeadingInfo = para.Range.Text
-                End If
-            End If
-        Else
-            Exit For
-        End If
-    Next para
 End Function
 
 ```
