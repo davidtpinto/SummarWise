@@ -161,6 +161,20 @@ Function ExcelModule()
                 End If
             Next i
         Next Match
+
+
+ ' Loop through all matched REQs in the paragraph
+    For Each Match In Matches
+        ReqID = Match.Value ' Keep the brackets around the REQ ID
+        HeadingInfo = GetHeadingInfo(WordParagraph.Range, Match.FirstIndex) ' Get the heading text
+
+        ' Update the sections in the correct column for each requirement
+        Dim currentRow As Long
+        currentRow = FindRowForReqID(xlSheet, ReqID)
+        If currentRow > 0 Then
+            UpdateSectionInCell xlSheet.Cells(currentRow, wordFileColumn), HeadingInfo
+        End If
+    Next Match
     Next WordParagraph
 
     ' Save and close the Excel workbook
@@ -220,6 +234,25 @@ Function GetHeadingInfo(WordRange As Range) As String
          End If
     Next para
     
+End Function
+
+Function UpdateSectionInCell(cell As Excel.Range, section As String)
+    Dim existingSections As String
+    existingSections = cell.Value
+
+    Dim sectionsArray() As String
+    If existingSections <> "" Then
+        sectionsArray = Split(existingSections, ", ")
+        If IsInArray(section, sectionsArray) = False Then
+            cell.Value = existingSections & ", " & section
+        End If
+    Else
+        cell.Value = section
+    End If
+End Function
+
+Function IsInArray(stringToBeFound As String, arr As Variant) As Boolean
+    IsInArray = (UBound(Filter(arr, stringToBeFound)) > -1)
 End Function
 
 Function FindOrAddWordFileColumn(xlSheet As Excel.Worksheet, wordFileName As String) As Long
