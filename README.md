@@ -118,7 +118,15 @@ Function ExcelModule()
     xlApp.Visible = False ' Excel runs in the background
     Set xlBook = xlApp.Workbooks.Open(excelFilePath, ReadOnly:=False)
     Set xlSheet = xlBook.Sheets("Compliance Matrix")
-        
+
+    ' Get the name of the current Word document
+    Dim wordFileName As String
+    wordFileName = ActiveDocument.Name
+
+    ' Find the column for the current Word document or add a new one
+    Dim wordFileColumn As Long
+    wordFileColumn = FindOrAddWordFileColumn(xlSheet, wordFileName)
+    
     ' Loop through each paragraph in the Word document
     For Each WordParagraph In ActiveDocument.Paragraphs
         ' Use regular expressions to find REQs (e.g., REQ0001, REQ0002, etc.) in the paragraph
@@ -143,11 +151,11 @@ Function ExcelModule()
                     xlSheet.Cells(i, "H").Value = "Complete" ' Assuming status is in column H
                      ' Append new heading info to existing data in column H
                         Dim existingData As String
-                        existingData = xlSheet.Cells(i, "H").Value
+                        existingData = xlSheet.Cells(i, wordFileColumn).Value
                         If existingData <> "" Then
-                            xlSheet.Cells(i, "H").Value = existingData & ", " & HeadingInfo
+                            xlSheet.Cells(i, wordFileColumn).Value = existingData & ", " & HeadingInfo
                         Else
-                            xlSheet.Cells(i, "H").Value = HeadingInfo
+                            xlSheet.Cells(i, wordFileColumn).Value = HeadingInfo
                         End If
                     Exit For
                 End If
