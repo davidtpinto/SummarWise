@@ -233,8 +233,32 @@ Function GetHeadingInfo(WordRange As Range) As String
                 End If
          End If
     Next para
-    
+  
 End Function
+
+Function GetHeadingInfo(rng As Word.Range, matchPosition As Integer) As String
+    Dim para As Word.Paragraph
+    GetHeadingInfo = ""
+    For Each para In rng.Document.Paragraphs
+        If para.Range.End <= matchPosition Then
+            If para.Style <> "Normal" Then
+                ' Check if there is numbering and include it
+                If Not para.Range.ListFormat Is Nothing Then
+                    If para.Range.ListFormat.ListString <> "" Then
+                        GetHeadingInfo = para.Range.ListFormat.ListString & " " & para.Range.Text
+                    Else
+                        GetHeadingInfo = para.Range.Text
+                    End If
+                Else
+                    GetHeadingInfo = para.Range.Text
+                End If
+            End If
+        Else
+            Exit For
+        End If
+    Next para
+End Function
+
 
 Function UpdateSectionInCell(cell As Excel.Range, section As String)
     Dim existingSections As String
