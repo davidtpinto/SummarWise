@@ -222,4 +222,17 @@ Function GetHeadingInfo(WordRange As Range) As String
     
 End Function
 
+Function FindOrAddWordFileColumn(xlSheet As Excel.Worksheet, wordFileName As String) As Long
+    Dim i As Long
+    For i = 9 To xlSheet.Cells(5, xlSheet.Columns.Count).End(xlExcelToLeft).Column
+        If xlSheet.Cells(5, i).Value = wordFileName Then
+            FindOrAddWordFileColumn = i
+            Exit Function
+        End If
+    Next i
+
+    ' If the file name is not found, add it to the next available column
+    FindOrAddWordFileColumn = i
+    xlSheet.Cells(5, i).Value = wordFileName
+End Function
 ```
