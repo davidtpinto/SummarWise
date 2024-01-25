@@ -141,7 +141,14 @@ Function ExcelModule()
             For i = 1 To lastRow
                 If xlSheet.Cells(i, "D").Value = ReqID Then ' Assuming Requirement ID is in column D
                     xlSheet.Cells(i, "H").Value = "Complete" ' Assuming status is in column H
-                    xlSheet.Cells(i, "I").Value = HeadingInfo ' Assuming heading info is in column I
+                     ' Append new heading info to existing data in column H
+                        Dim existingData As String
+                        existingData = xlSheet.Cells(i, "H").Value
+                        If existingData <> "" Then
+                            xlSheet.Cells(i, "H").Value = existingData & ", " & HeadingInfo
+                        Else
+                            xlSheet.Cells(i, "H").Value = HeadingInfo
+                        End If
                     Exit For
                 End If
             Next i
