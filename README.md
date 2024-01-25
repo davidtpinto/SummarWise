@@ -215,6 +215,18 @@ Function ExtractRequirementID(Text As String) As String
     ExtractRequirementID = ReqID
 End Function
 
+Function FindRowForReqID(xlSheet As Excel.Worksheet, reqID As String) As Long
+    Dim i As Long
+    FindRowForReqID = 0 ' Default to 0 (not found)
+    For i = 1 To xlSheet.Cells(xlSheet.Rows.Count, "A").End(-4162).Row ' -4162 corresponds to xlUp
+        If xlSheet.Cells(i, "A").Value = reqID Then
+            FindRowForReqID = i
+            Exit Function
+        End If
+    Next i
+End Function
+
+
 ' Function to get heading information from the Word document
 Function GetHeadingInfo(WordRange As Range) As String
     Dim para As Word.Paragraph
